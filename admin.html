@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7.O CLOCK | Admin Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@200;300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000;
+            --panel: #0D0D0D;
+            --card: #111;
+            --white: #fff;
+            --grey: #888;
+            --border: rgba(255, 255, 255, 0.07);
+            --green: #2ecc71;
+            --red: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Jost', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--white);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        .bebas {
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        /* Login Screen */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background: var(--panel);
+            padding: 50px;
+            border: 1px solid var(--border);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h2 {
+            font-size: clamp(32px, 6vw, 42px);
+            margin-bottom: 30px;
+            letter-spacing: 4px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--white);
+            margin-bottom: 20px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .login-input:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--white);
+            color: var(--bg);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .login-error {
+            color: var(--red);
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Dashboard App */
+        #app {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Topbar */
+        .topbar {
+            height: 70px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-logo {
+            font-size: clamp(20px, 4vw, 28px);
+            letter-spacing: 2px;
+        }
+
+        .top-center {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--grey);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--grey);
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .logout-btn:hover {
+            color: var(--white);
+            border-color: var(--white);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Panel - Form */
+        .left-panel {
+            width: 380px;
+            min-width: 380px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 40px;
+            overflow-y: auto;
+            height: calc(100vh - 70px);
+            position: sticky;
+            top: 70px;
+        }
+
+        .left-panel h3 {
+            font-size: clamp(24px, 4vw, 32px);
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--grey);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--white);
+            padding: 12px 15px;
+            outline: none;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .upload-zone {
+            width: 100%;
+            height: 180px;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 25px;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .upload-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-size: 13px;
+            color: var(--grey);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #preview-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--white);
+            color: var(--bg);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #ddd;
+        }
+
+        .submit-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Right Panel - Grid */
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            height: calc(100vh - 70px);
+        }
+
+        .grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .grid-header h3 {
+            font-size: clamp(24px, 4vw, 32px);
+            letter-spacing: 2px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .admin-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-img-wrap {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #080808;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+        }
+
+        .card-category {
+            font-size: 10px;
+            color: var(--grey);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 15px 15px 5px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            padding: 0 15px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-price {
+            font-size: 14px;
+            padding: 0 15px 15px;
+            color: var(--grey);
+        }
+
+        .card-delete {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-top: 1px solid var(--border);
+            color: var(--grey);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .card-delete:hover {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--red);
+        }
+
+        /* Toasts */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 15px 25px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--green);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--red);
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .loader-text {
+            padding: 40px;
+            color: var(--grey);
+            text-align: center;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                width: 100%;
+                min-width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .right-panel {
+                height: auto;
+            }
+
+            .top-center {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 class="bebas">ADMIN ACCESS</h2>
+            <input type="password" id="password-input" class="login-input" placeholder="Enter passkey..."
+                autocomplete="off">
+            <button id="login-btn" class="login-btn">Secure Login</button>
+            <div id="login-error" class="login-error">Incorrect credentials</div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="app">
+        <div class="topbar">
+            <div class="top-logo bebas">7.O CLOCK ADMIN</div>
+            <div class="top-center">
+                <div class="pulse-dot"></div> Live on site
+            </div>
+            <div class="top-right">
+                <span id="product-count" style="font-size: 12px; color: var(--grey); letter-spacing: 1px;">0
+                    Items</span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <!-- Upload Panel -->
+            <div class="left-panel">
+                <h3 class="bebas">ADD NEW PRODUCT</h3>
+
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Tap to select photo</div>
+                    <input type="file" id="file-input" accept="image/*">
+                    <img id="preview-img" src="" alt="Preview">
+                </div>
+
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="p-name" class="form-control" placeholder="e.g. Noir Tuxedo Suite">
+                </div>
+
+                <div class="form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" id="p-price" class="form-control" placeholder="e.g. 5990">
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="p-category" class="form-control">
+                        <option value="Formals">Formals</option>
+                        <option value="Ethnic">Ethnic</option>
+                        <option value="Streetwear">Streetwear</option>
+                        <option value="Party Wear">Party Wear</option>
+                        <option value="Accessories">Accessories</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Badge (Optional)</label>
+                    <input type="text" id="p-badge" class="form-control" placeholder="e.g. New Arrival / Sold Out">
+                </div>
+
+                <button id="add-btn" class="submit-btn" disabled>Select Photo First</button>
+            </div>
+
+            <!-- Live Inventory -->
+            <div class="right-panel">
+                <div class="grid-header">
+                    <h3 class="bebas">LIVE INVENTORY</h3>
+                </div>
+                <div id="admin-grid" class="admin-grid">
+                    <div class="loader-text">Connecting to server...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, addDoc, deleteDoc, doc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+
+        // FIREBASE CONFIG USER PLACEHOLDER
+
+
+        let db = null;
+        let storage = null;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (e) {
+            console.warn("Firebase config is incomplete.");
+        }
+
+        // --- Auth System ---
+        const ADMIN_PASSWORD = "7oclock2016";
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app');
+        const passInput = document.getElementById('password-input');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        const attemptLogin = () => {
+            if (passInput.value === ADMIN_PASSWORD) {
+                sessionStorage.setItem('admin_auth', 'true');
+                loginScreen.style.display = 'none';
+                appScreen.style.display = 'flex';
+                initDashboard();
+            } else {
+                loginError.style.opacity = '1';
+                setTimeout(() => { loginError.style.opacity = '0'; }, 2500);
+            }
+        };
+
+        if (sessionStorage.getItem('admin_auth') === 'true') {
+            loginScreen.style.display = 'none';
+            appScreen.style.display = 'flex';
+            initDashboard();
+        }
+
+        loginBtn.addEventListener('click', attemptLogin);
+        passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptLogin(); });
+
+        logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('admin_auth');
+            location.reload();
+        });
+
+        // --- Toasts ---
+        const showToast = (msg, type = "success") => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : '✕'}</span> ${msg}`;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+
+        // --- Dashboard Logic ---
+        function initDashboard() {
+            if (!db || !storage) {
+                document.getElementById('admin-grid').innerHTML = '<div class="loader-text">Firebase config required. Please update the source code.</div>';
+                return;
+            }
+
+            // Elements
+            const adminGrid = document.getElementById('admin-grid');
+            const countLabel = document.getElementById('product-count');
+            const uploadZone = document.getElementById('upload-zone');
+            const fileInput = document.getElementById('file-input');
+            const previewImg = document.getElementById('preview-img');
+            const addBtn = document.getElementById('add-btn');
+
+            // State
+            let selectedFile = null;
+
+            // 1. Live Snapshot
+            const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                adminGrid.innerHTML = '';
+                let count = 0;
+
+                if (snapshot.empty) {
+                    adminGrid.innerHTML = '<div class="loader-text">No products in inventory.</div>';
+                    countLabel.textContent = "0 Items";
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    count++;
+                    const data = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'admin-card';
+                    card.innerHTML = `
+                        <div class="card-img-wrap">
+                            <img src="${data.imageUrl || ''}" class="card-img">
+                        </div>
+                        <div class="card-category">${data.category} ${data.badge ? '• ' + data.badge : ''}</div>
+                        <div class="card-title">${data.name}</div>
+                        <div class="card-price">₹${data.price}</div>
+                        <button class="card-delete" data-id="${docSnap.id}" data-storage="${data.storagePath}">✕ Remove</button>
+                    `;
+                    adminGrid.appendChild(card);
+                });
+
+                countLabel.textContent = `${count} Items`;
+
+                // Attach delete handlers
+                document.querySelectorAll('.card-delete').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        const storagePath = e.target.getAttribute('data-storage');
+
+                        if (confirm('Are you sure you want to completely delete this product?')) {
+                            const ogText = e.target.textContent;
+                            e.target.textContent = 'Removing...';
+                            e.target.disabled = true;
+                            try {
+                                await deleteDoc(doc(db, "products", id));
+                                if (storagePath) {
+                                    const delRef = ref(storage, storagePath);
+                                    await deleteObject(delRef).catch(err => console.warn("Failed deleting image", err));
+                                }
+                                showToast("Product deleted successfully");
+                            } catch (err) {
+                                console.error(err);
+                                showToast("Failed to delete product", "error");
+                                e.target.textContent = ogText;
+                                e.target.disabled = false;
+                            }
+                        }
+                    });
+                });
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                adminGrid.innerHTML = '<div class="loader-text">Error syncing inventory.</div>';
+            });
+
+            // 2. Upload Preview Logic
+            uploadZone.addEventListener('click', () => fileInput.click());
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = "#fff"; });
+            uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.style.borderColor = "rgba(255,255,255,0.3)"; });
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = "rgba(255,255,255,0.3)";
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+            });
+
+            const handleFile = (file) => {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                    addBtn.disabled = false;
+                    addBtn.textContent = 'Add Product to Store';
+                }
+                reader.readAsDataURL(file);
+            }
+
+            // 3. Submit Product Logic
+            addBtn.addEventListener('click', async () => {
+                const name = document.getElementById('p-name').value.trim();
+                const price = document.getElementById('p-price').value.trim();
+                const category = document.getElementById('p-category').value;
+                const badge = document.getElementById('p-badge').value.trim();
+
+                if (!selectedFile || !name || !price) {
+                    showToast("Please fill all required fields", "error");
+                    return;
+                }
+
+                addBtn.disabled = true;
+                addBtn.style.pointerEvents = 'none';
+
+                // Upload Image
+                const fileName = `products/${Date.now()}_${selectedFile.name}`;
+                const storageRef = ref(storage, fileName);
+                const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        addBtn.textContent = `Uploading Photo... ${Math.round(progress)}%`;
+                    },
+                    (error) => {
+                        console.error("Upload error:", error);
+                        showToast("Failed to upload photo", "error");
+                        addBtn.disabled = false;
+                        addBtn.style.pointerEvents = 'auto';
+                        addBtn.textContent = 'Add Product to Store';
+                    },
+                    async () => {
+                        addBtn.textContent = `Finalizing...`;
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+                            // Save to Firestore
+                            await addDoc(collection(db, "products"), {
+                                name: name,
+                                price: Number(price),
+                                category: category,
+                                badge: badge,
+                                imageUrl: downloadURL,
+                                storagePath: fileName,
+                                createdAt: serverTimestamp()
+                            });
+
+                            showToast(`"${name}" Added Live!`);
+
+                            // Reset Form
+                            document.getElementById('p-name').value = '';
+                            document.getElementById('p-price').value = '';
+                            document.getElementById('p-badge').value = '';
+                            document.getElementById('p-category').value = 'Formals';
+                            selectedFile = null;
+                            previewImg.style.display = 'none';
+                            previewImg.src = '';
+                            fileInput.value = '';
+                            addBtn.textContent = 'Select Photo First';
+
+                        } catch (err) {
+                            console.error("Firestore error:", err);
+                            showToast("Error adding to database", "error");
+                            addBtn.disabled = false;
+                            addBtn.textContent = 'Retry Upload';
+                        } finally {
+                            addBtn.style.pointerEvents = 'auto';
+                        }
+                    }
+                );
+            });
+        }
+    </script>
+</body>
+
+</html>
