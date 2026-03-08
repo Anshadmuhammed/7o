@@ -584,22 +584,18 @@
     <!-- Toast Notifications -->
     <div id="toast-container"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getFirestore, addDoc, deleteDoc, doc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+    <!-- Supabase Logic & App Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // SUPABASE CONFIG USER PLACEHOLDER
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-        // FIREBASE CONFIG USER PLACEHOLDER
-
-
-        let db = null;
-        let storage = null;
+        let sb = null;
         try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            storage = getStorage(app);
+            sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (e) {
-            console.warn("Firebase config is incomplete.");
+            console.warn("Supabase config is incomplete.");
         }
 
         // --- Auth System ---
@@ -655,8 +651,8 @@
 
         // --- Dashboard Logic ---
         function initDashboard() {
-            if (!db || !storage) {
-                document.getElementById('admin-grid').innerHTML = '<div class="loader-text">Firebase config required. Please update the source code.</div>';
+            if (!sb) {
+                document.getElementById('admin-grid').innerHTML = '<div class="loader-text">Supabase config required. Please update the source code.</div>';
                 return;
             }
 
@@ -671,67 +667,85 @@
             // State
             let selectedFile = null;
 
-            // 1. Live Snapshot
-            const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
-                adminGrid.innerHTML = '';
-                let count = 0;
+            // 1. Live Fetch
+            const loadProducts = async () => {
+                try {
+                    const { data, error } = await sb
+                        .from('products')
+                        .select('*')
+                        .order('created_at', { ascending: false });
 
-                if (snapshot.empty) {
-                    adminGrid.innerHTML = '<div class="loader-text">No products in inventory.</div>';
-                    countLabel.textContent = "0 Items";
-                    return;
-                }
+                    if (error) throw error;
 
-                snapshot.forEach(docSnap => {
-                    count++;
-                    const data = docSnap.data();
-                    const card = document.createElement('div');
-                    card.className = 'admin-card';
-                    card.innerHTML = `
-                        <div class="card-img-wrap">
-                            <img src="${data.imageUrl || ''}" class="card-img">
-                        </div>
-                        <div class="card-category">${data.category} ${data.badge ? '• ' + data.badge : ''}</div>
-                        <div class="card-title">${data.name}</div>
-                        <div class="card-price">₹${data.price}</div>
-                        <button class="card-delete" data-id="${docSnap.id}" data-storage="${data.storagePath}">✕ Remove</button>
-                    `;
-                    adminGrid.appendChild(card);
-                });
+                    adminGrid.innerHTML = '';
+                    let count = 0;
 
-                countLabel.textContent = `${count} Items`;
+                    if (!data || data.length === 0) {
+                        adminGrid.innerHTML = '<div class="loader-text">No products in inventory.</div>';
+                        countLabel.textContent = "0 Items";
+                        return;
+                    }
 
-                // Attach delete handlers
-                document.querySelectorAll('.card-delete').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        const storagePath = e.target.getAttribute('data-storage');
-
-                        if (confirm('Are you sure you want to completely delete this product?')) {
-                            const ogText = e.target.textContent;
-                            e.target.textContent = 'Removing...';
-                            e.target.disabled = true;
-                            try {
-                                await deleteDoc(doc(db, "products", id));
-                                if (storagePath) {
-                                    const delRef = ref(storage, storagePath);
-                                    await deleteObject(delRef).catch(err => console.warn("Failed deleting image", err));
-                                }
-                                showToast("Product deleted successfully");
-                            } catch (err) {
-                                console.error(err);
-                                showToast("Failed to delete product", "error");
-                                e.target.textContent = ogText;
-                                e.target.disabled = false;
-                            }
-                        }
+                    data.forEach(item => {
+                        count++;
+                        const card = document.createElement('div');
+                        card.className = 'admin-card';
+                        card.innerHTML = `
+                            <div class="card-img-wrap">
+                                <img src="${item.image_url || ''}" class="card-img">
+                            </div>
+                            <div class="card-category">${item.category} ${item.badge ? '• ' + item.badge : ''}</div>
+                            <div class="card-title">${item.name}</div>
+                            <div class="card-price">₹${item.price}</div>
+                            <button class="card-delete" data-id="${item.id}" data-storage="${item.storage_path}">✕ Remove</button>
+                        `;
+                        adminGrid.appendChild(card);
                     });
-                });
-            }, (error) => {
-                console.error("Snapshot error:", error);
-                adminGrid.innerHTML = '<div class="loader-text">Error syncing inventory.</div>';
-            });
+
+                    countLabel.textContent = `${count} Items`;
+
+                    // Attach delete handlers
+                    document.querySelectorAll('.card-delete').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const id = e.target.getAttribute('data-id');
+                            const storagePath = e.target.getAttribute('data-storage');
+
+                            if (confirm('Are you sure you want to completely delete this product?')) {
+                                const ogText = e.target.textContent;
+                                e.target.textContent = 'Removing...';
+                                e.target.disabled = true;
+                                try {
+                                    if (storagePath) {
+                                        await sb.storage.from('product-images').remove([storagePath]);
+                                    }
+                                    await sb.from('products').delete().eq('id', id);
+
+                                    showToast("Product deleted successfully");
+                                } catch (err) {
+                                    console.error(err);
+                                    showToast("Failed to delete product", "error");
+                                    e.target.textContent = ogText;
+                                    e.target.disabled = false;
+                                }
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error("Fetch error:", error);
+                    adminGrid.innerHTML = '<div class="loader-text">Error syncing inventory.</div>';
+                }
+            };
+
+            loadProducts();
+
+            // Realtime in admin
+            sb.channel('admin-products')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'products'
+                }, loadProducts)
+                .subscribe();
 
             // 2. Upload Preview Logic
             uploadZone.addEventListener('click', () => fileInput.click());
@@ -772,63 +786,58 @@
 
                 addBtn.disabled = true;
                 addBtn.style.pointerEvents = 'none';
+                addBtn.textContent = `Uploading Photo...`;
 
-                // Upload Image
-                const fileName = `products/${Date.now()}_${selectedFile.name}`;
-                const storageRef = ref(storage, fileName);
-                const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+                try {
+                    // Upload Image directly to Supabase Storage
+                    const fileName = `products/${Date.now()}_${selectedFile.name}`;
+                    const { error: uploadError } = await sb.storage
+                        .from('product-images')
+                        .upload(fileName, selectedFile);
 
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        addBtn.textContent = `Uploading Photo... ${Math.round(progress)}%`;
-                    },
-                    (error) => {
-                        console.error("Upload error:", error);
-                        showToast("Failed to upload photo", "error");
-                        addBtn.disabled = false;
-                        addBtn.style.pointerEvents = 'auto';
-                        addBtn.textContent = 'Add Product to Store';
-                    },
-                    async () => {
-                        addBtn.textContent = `Finalizing...`;
-                        try {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    if (uploadError) throw uploadError;
 
-                            // Save to Firestore
-                            await addDoc(collection(db, "products"), {
-                                name: name,
-                                price: Number(price),
-                                category: category,
-                                badge: badge,
-                                imageUrl: downloadURL,
-                                storagePath: fileName,
-                                createdAt: serverTimestamp()
-                            });
+                    const { data: urlData } = sb.storage
+                        .from('product-images')
+                        .getPublicUrl(fileName);
 
-                            showToast(`"${name}" Added Live!`);
+                    const imageUrl = urlData.publicUrl;
 
-                            // Reset Form
-                            document.getElementById('p-name').value = '';
-                            document.getElementById('p-price').value = '';
-                            document.getElementById('p-badge').value = '';
-                            document.getElementById('p-category').value = 'Formals';
-                            selectedFile = null;
-                            previewImg.style.display = 'none';
-                            previewImg.src = '';
-                            fileInput.value = '';
-                            addBtn.textContent = 'Select Photo First';
+                    addBtn.textContent = `Finalizing...`;
 
-                        } catch (err) {
-                            console.error("Firestore error:", err);
-                            showToast("Error adding to database", "error");
-                            addBtn.disabled = false;
-                            addBtn.textContent = 'Retry Upload';
-                        } finally {
-                            addBtn.style.pointerEvents = 'auto';
-                        }
-                    }
-                );
+                    // Save to Supabase DB
+                    const { error: dbError } = await sb.from('products').insert({
+                        name,
+                        price: Number(price),
+                        category,
+                        badge,
+                        image_url: imageUrl,
+                        storage_path: fileName
+                    });
+
+                    if (dbError) throw dbError;
+
+                    showToast(`"${name}" Added Live!`);
+
+                    // Reset Form
+                    document.getElementById('p-name').value = '';
+                    document.getElementById('p-price').value = '';
+                    document.getElementById('p-badge').value = '';
+                    document.getElementById('p-category').value = 'Formals';
+                    selectedFile = null;
+                    previewImg.style.display = 'none';
+                    previewImg.src = '';
+                    fileInput.value = '';
+                    addBtn.textContent = 'Select Photo First';
+
+                } catch (err) {
+                    console.error("Supabase error:", err);
+                    showToast("Error adding to database", "error");
+                    addBtn.disabled = false;
+                    addBtn.textContent = 'Retry Upload';
+                } finally {
+                    addBtn.style.pointerEvents = 'auto';
+                }
             });
         }
     </script>
