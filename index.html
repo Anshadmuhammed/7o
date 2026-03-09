@@ -958,6 +958,22 @@
             color: rgba(255, 255, 255, 0.5);
             letter-spacing: 0.1em;
         }
+
+        .filter-count {
+            display: inline-block;
+            font-family: 'Jost', sans-serif;
+            font-weight: 200;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.35);
+            margin-left: 6px;
+            letter-spacing: 0.05em;
+            vertical-align: middle;
+            transition: color 0.3s;
+        }
+
+        .filter-btn.active .filter-count {
+            color: rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 
@@ -1010,12 +1026,27 @@
             <h2 class="bebas">THE COLLECTION</h2>
         </div>
         <div class="shop-filters">
-            <button class="filter-btn active" data-filter="All">All</button>
-            <button class="filter-btn" data-filter="Formals">Formals</button>
-            <button class="filter-btn" data-filter="Ethnic">Ethnic</button>
-            <button class="filter-btn" data-filter="Streetwear">Streetwear</button>
-            <button class="filter-btn" data-filter="Party Wear">Party Wear</button>
-            <button class="filter-btn" data-filter="Accessories">Accessories</button>
+            <button class="filter-btn active" data-filter="All">
+                ALL <span class="filter-count" id="count-all"></span>
+            </button>
+            <button class="filter-btn" data-filter="Formals">
+                FORMALS <span class="filter-count" id="count-formals"></span>
+            </button>
+            <button class="filter-btn" data-filter="Ethnic">
+                ETHNIC <span class="filter-count" id="count-ethnic"></span>
+            </button>
+            <button class="filter-btn" data-filter="Streetwear">
+                STREETWEAR <span class="filter-count" id="count-streetwear"></span>
+            </button>
+            <button class="filter-btn" data-filter="Party Wear">
+                PARTY WEAR <span class="filter-count" id="count-partywear"></span>
+            </button>
+            <button class="filter-btn" data-filter="Accessories">
+                ACCESSORIES <span class="filter-count" id="count-accessories"></span>
+            </button>
+            <button class="filter-btn" data-filter="Casual">
+                CASUAL <span class="filter-count" id="count-casual"></span>
+            </button>
         </div>
         <div id="product-grid" class="shop-grid">
             <p class="loading-state">Loading latest collection...</p>
@@ -1153,7 +1184,25 @@
         let allProducts = [];
         let currentFilter = 'All';
 
+        function updateCounts(products) {
+            const categories = {
+                'all': products.length,
+                'formals': products.filter(p => p.category === 'Formals').length,
+                'ethnic': products.filter(p => p.category === 'Ethnic').length,
+                'streetwear': products.filter(p => p.category === 'Streetwear').length,
+                'partywear': products.filter(p => p.category === 'Party Wear').length,
+                'accessories': products.filter(p => p.category === 'Accessories').length,
+                'casual': products.filter(p => p.category === 'Casual').length,
+            };
+            Object.entries(categories).forEach(([key, count]) => {
+                const el = document.getElementById('count-' + key);
+                if (el) el.textContent = count > 0 ? '(' + count + ')' : '';
+            });
+        }
+
         const renderProducts = (productsToRender = allProducts) => {
+            updateCounts(allProducts);
+
             if (productsToRender.length === 0) {
                 productGrid.innerHTML = '<p class="empty-state">No products found.</p>';
                 return;
