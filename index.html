@@ -1047,6 +1047,9 @@
             <button class="filter-btn" data-filter="Casual">
                 CASUAL <span class="filter-count" id="count-casual"></span>
             </button>
+            <button class="filter-btn" data-filter="Combo">
+                COMBO <span class="filter-count" id="count-combo"></span>
+            </button>
         </div>
         <div id="product-grid" class="shop-grid">
             <p class="loading-state">Loading latest collection...</p>
@@ -1193,6 +1196,7 @@
                 'partywear': products.filter(p => p.category === 'Party Wear').length,
                 'accessories': products.filter(p => p.category === 'Accessories').length,
                 'casual': products.filter(p => p.category === 'Casual').length,
+                'combo': products.filter(p => p.category === 'Combo').length,
             };
             Object.entries(categories).forEach(([key, count]) => {
                 const el = document.getElementById('count-' + key);
