@@ -865,6 +865,23 @@
                 padding: 80px 5%;
             }
 
+            #product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2px;
+            }
+
+            .product-info {
+                padding: 15px 10px;
+            }
+
+            .product-name {
+                font-size: 18px;
+            }
+
+            .product-price {
+                font-size: 13px;
+            }
+
             #stats {
                 flex-direction: column;
                 gap: 40px;
@@ -1227,7 +1244,7 @@
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div class="product-img-wrap">
-                        <img src="${product.image_url || ''}" alt="${product.name}" class="product-img">
+                        <img src="${product.image_url || ''}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
                         ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
                         <div class="product-overlay">
                             <a href="${orderUrl}" target="_blank" class="btn btn-filled order-btn">Order on WhatsApp</a>
