@@ -234,7 +234,7 @@
 
         .subtitle-group {
             opacity: 0;
-            animation: fadeUp 1s ease 3s forwards;
+            animation: fadeUp 1s ease 0.5s forwards;
             margin-top: -10px;
         }
 
@@ -257,7 +257,7 @@
             display: flex;
             gap: 20px;
             opacity: 0;
-            animation: fadeUp 1s ease 3.5s forwards;
+            animation: fadeUp 1s ease 0.8s forwards;
             pointer-events: auto;
         }
 
@@ -1624,7 +1624,7 @@
             const pPrice = document.getElementById('order-product-price').value;
             const pImage = document.getElementById('order-product-image').value;
             
-            const waText = encodeURIComponent(`Hi! I want to place an order:\n\n*Product:* ${pName}\n*Price:* ₹${pPrice}\n*Image:* ${pImage}\n*Size:* ${size}\n\n*Customer Details:*\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\nPincode: ${pincode}`);
+            const waText = encodeURIComponent(`Hi! I want to place an order:\n\n*Product:* ${pName}\n*Price:* ₹${pPrice}\n*Size:* ${size}\n\n*Customer Details:*\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\nPincode: ${pincode}`);
             
             window.open(`https://wa.me/918075857306?text=${waText}`, '_blank');
             orderModal.style.display = 'none';
