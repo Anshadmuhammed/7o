@@ -1075,9 +1075,12 @@
         
         @media (max-width: 900px) {
             .pd-modal-content { flex-direction: column; overflow-y: auto; height: 100vh; max-height: 100vh; border-radius: 0; }
-            .pd-gallery { flex-direction: column-reverse; padding: 10px; min-height: 50vh; }
-            .pd-thumbnails { flex-direction: row; width: 100%; justify-content: center; }
-            .pd-info { padding: 30px 20px; }
+            .pd-gallery { flex-direction: column-reverse; padding: 15px; height: 60vh; min-height: 60vh; flex-shrink: 0; gap: 10px; }
+            .pd-thumbnails { flex-direction: row; width: 100%; justify-content: center; height: 60px; flex-shrink: 0; }
+            .pd-thumb { width: 60px; height: 60px; }
+            .pd-main-img-wrap { flex: 1; height: calc(100% - 70px); overflow: hidden; }
+            .pd-main-img { max-height: 100%; width: auto; object-fit: contain; }
+            .pd-info { padding: 30px 20px; flex-shrink: 0; }
             .pd-title { font-size: 28px; }
         }
     </style>
@@ -1206,6 +1209,12 @@
             <span class="marquee-text">✦ Wholesale Purchase Available</span>
             <span class="marquee-text">✦ Wholesale Purchase Available</span>
         </div>
+    </div>
+    
+    <div style="text-align: center; margin: 15px 0 30px 0; width: 100%;">
+        <a href="https://www.instagram.com/second___vault?igsh=ZmNzbno4MDR6cnp3" target="_blank" style="color: #fff; text-decoration: underline; font-family: 'Jost', sans-serif; font-size: 14px; letter-spacing: 1px; transition: color 0.3s;" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#fff'">
+            View Wholesale Updates on Instagram
+        </a>
     </div>
 
     <section id="stats" class="reveal">
