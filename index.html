@@ -1325,10 +1325,10 @@
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div class="product-img-wrap">
-                        <img src="${(product.image_url || \'\').split(\',\')[0]}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
+                        <img src="${(product.image_url || '').split(',')[0]}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
                         ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
                         <div class="product-overlay">
-                            <button onclick="openOrderModal('${product.name ? product.name.replace(/'/g, "\'") : ''}', '${product.price}', '${product.image_url}')" class="btn btn-filled order-btn" style="width: 100%; border:none;">Order Now</button>
+                            <button onclick="openProductDetails(decodeURIComponent('${encodeURIComponent(product.name || '')}'), '${product.price}', '${product.image_url}')" class="btn btn-filled order-btn" style="width: 100%; border:none;">View Details</button>
                         </div>
                     </div>
                     <div class="product-info">
