@@ -1081,6 +1081,37 @@
             .pd-title { font-size: 28px; }
         }
     </style>
+    <style>
+        /* Sliding Banner */
+        .marquee-wrapper {
+            background-color: #fff;
+            color: #000;
+            padding: 15px 0;
+            overflow: hidden;
+            position: relative;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+        }
+        .marquee-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            letter-spacing: 2px;
+            padding: 0 40px;
+            text-transform: uppercase;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
 </head>
 
 <body>
@@ -1157,6 +1188,25 @@
             <p class="loading-state">Loading latest collection...</p>
         </div>
     </section>
+
+    <!-- Sliding Banner -->
+    <div class="marquee-wrapper reveal">
+        <div class="marquee-content">
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <!-- Duplicate for seamless looping -->
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+            <span class="marquee-text">✦ Wholesale Purchase Available</span>
+        </div>
+    </div>
 
     <section id="stats" class="reveal">
         <div class="stat-item">
