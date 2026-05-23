@@ -1015,6 +1015,72 @@
         }
         .form-input:focus { border-color: #fff; }
     </style>
+
+        /* Product Details Modal */
+        .pd-modal-content {
+            background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0; width: 100%; max-width: 1000px; height: 90vh;
+            display: flex; position: relative; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .pd-gallery {
+            flex: 1; display: flex; background: #080808; padding: 20px; gap: 20px;
+        }
+        .pd-thumbnails {
+            display: flex; flex-direction: column; gap: 15px; width: 80px;
+        }
+        .pd-thumb {
+            width: 80px; height: 80px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer; opacity: 0.6; transition: 0.3s;
+        }
+        .pd-thumb.active, .pd-thumb:hover { opacity: 1; border-color: #fff; }
+        .pd-main-img-wrap {
+            flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
+        }
+        .pd-main-img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+        }
+        .pd-info {
+            flex: 1; padding: 50px; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .pd-title {
+            font-size: 42px; margin-bottom: 10px; line-height: 1.1; letter-spacing: 2px;
+        }
+        .pd-price {
+            font-size: 24px; color: #fff; margin-bottom: 30px; font-weight: 500;
+        }
+        .pd-section-title {
+            font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 15px;
+        }
+        .pd-sizes {
+            display: flex; gap: 15px; margin-bottom: 40px;
+        }
+        .pd-size-btn {
+            width: 50px; height: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; display: flex; justify-content: center; align-items: center; font-size: 14px;
+            cursor: pointer; transition: 0.3s; font-family: 'Jost', sans-serif;
+        }
+        .pd-size-btn.active {
+            background: #fff; color: #000; border-color: #fff; font-weight: bold;
+        }
+        .pd-size-btn:hover:not(.active) {
+            border-color: rgba(255,255,255,0.5);
+        }
+        .pd-action-btn {
+            width: 100%; padding: 18px; background: #fff; color: #000; font-family: 'Jost', sans-serif;
+            text-transform: uppercase; letter-spacing: 2px; font-weight: 600; font-size: 14px;
+            border: none; cursor: pointer; transition: 0.3s;
+        }
+        .pd-action-btn:hover { background: #e0e0e0; }
+        
+        @media (max-width: 900px) {
+            .pd-modal-content { flex-direction: column; overflow-y: auto; height: 100vh; max-height: 100vh; border-radius: 0; }
+            .pd-gallery { flex-direction: column-reverse; padding: 10px; min-height: 50vh; }
+            .pd-thumbnails { flex-direction: row; width: 100%; justify-content: center; }
+            .pd-info { padding: 30px 20px; }
+            .pd-title { font-size: 28px; }
+        }
+    </style>
 </head>
 
 <body>
@@ -1259,7 +1325,7 @@
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div class="product-img-wrap">
-                        <img src="${product.image_url || ''}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
+                        <img src="${(product.image_url || \'\').split(\',\')[0]}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
                         ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
                         <div class="product-overlay">
                             <button onclick="openOrderModal('${product.name ? product.name.replace(/'/g, "\'") : ''}', '${product.price}', '${product.image_url}')" class="btn btn-filled order-btn" style="width: 100%; border:none;">Order Now</button>
@@ -1570,6 +1636,104 @@
         animate();
     </script>
 
+    
+    <!-- Product Details Modal -->
+    <div id="pd-modal" class="modal-overlay" style="display: none;">
+        <div class="pd-modal-content">
+            <span class="close-modal" id="close-pd-modal" style="z-index: 10; color: #fff;">&times;</span>
+            <div class="pd-gallery">
+                <div class="pd-thumbnails" id="pd-thumbnails">
+                    <!-- Thumbs populated by JS -->
+                </div>
+                <div class="pd-main-img-wrap">
+                    <img id="pd-main-img" src="" class="pd-main-img">
+                </div>
+            </div>
+            <div class="pd-info">
+                <h2 id="pd-title" class="bebas pd-title">Product Name</h2>
+                <div id="pd-price" class="pd-price">₹0</div>
+                
+                <div class="pd-section-title">Select Size</div>
+                <div class="pd-sizes" id="pd-sizes">
+                    <button class="pd-size-btn">S</button>
+                    <button class="pd-size-btn">M</button>
+                    <button class="pd-size-btn">L</button>
+                    <button class="pd-size-btn">XL</button>
+                </div>
+                
+                <button id="pd-order-btn" class="pd-action-btn">Order on WhatsApp</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Product Details Logic ---
+        const pdModal = document.getElementById('pd-modal');
+        const pdMainImg = document.getElementById('pd-main-img');
+        const pdThumbnails = document.getElementById('pd-thumbnails');
+        const pdTitle = document.getElementById('pd-title');
+        const pdPrice = document.getElementById('pd-price');
+        const pdSizeBtns = document.querySelectorAll('.pd-size-btn');
+        const pdOrderBtn = document.getElementById('pd-order-btn');
+        
+        let currentProduct = null;
+        let selectedSize = null;
+
+        window.openProductDetails = (name, price, imageUrls) => {
+            currentProduct = { name, price, imageUrls };
+            selectedSize = null;
+            pdSizeBtns.forEach(btn => btn.classList.remove('active'));
+            
+            pdTitle.textContent = name;
+            pdPrice.textContent = '₹' + price;
+            
+            const urls = (imageUrls || '').split(',');
+            pdMainImg.src = urls[0];
+            
+            // Build thumbnails
+            pdThumbnails.innerHTML = '';
+            urls.forEach((url, index) => {
+                if(!url.trim()) return;
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'pd-thumb' + (index === 0 ? ' active' : '');
+                img.onclick = () => {
+                    pdMainImg.src = url;
+                    document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+                    img.classList.add('active');
+                };
+                pdThumbnails.appendChild(img);
+            });
+            
+            pdModal.style.display = 'flex';
+        };
+
+        document.getElementById('close-pd-modal').onclick = () => {
+            pdModal.style.display = 'none';
+        };
+        
+        // Select Size
+        pdSizeBtns.forEach(btn => {
+            btn.onclick = () => {
+                pdSizeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedSize = btn.textContent;
+            };
+        });
+
+        // Proceed to Order Form
+        pdOrderBtn.onclick = () => {
+            if(!selectedSize) {
+                alert('Please select a size first.');
+                return;
+            }
+            pdModal.style.display = 'none';
+            // Open the existing order modal and pre-fill size
+            openOrderModal(currentProduct.name, currentProduct.price, currentProduct.imageUrls);
+            document.getElementById('order-size').value = selectedSize;
+        };
+    </script>
+    
     <!-- Order Modal -->
     <div id="order-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
@@ -1607,9 +1771,8 @@
         };
         
         window.onclick = (e) => {
-            if (e.target === orderModal) {
-                orderModal.style.display = 'none';
-            }
+            if (e.target === orderModal) orderModal.style.display = 'none';
+            if (e.target === pdModal) pdModal.style.display = 'none';
         };
 
         orderForm.onsubmit = (e) => {

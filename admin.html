@@ -532,11 +532,19 @@
             <div class="left-panel">
                 <h3 class="bebas">ADD NEW PRODUCT</h3>
 
-                <div class="upload-zone" id="upload-zone">
-                    <div class="upload-icon">📷</div>
-                    <div class="upload-text">Tap to select photo</div>
-                    <input type="file" id="file-input" accept="image/*">
-                    <img id="preview-img" src="" alt="Preview">
+                <div style="display:flex; gap:15px; margin-bottom:25px;">
+                    <div class="upload-zone" id="upload-zone" style="flex:1; margin-bottom:0;">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Front Photo</div>
+                        <input type="file" id="file-input" accept="image/*">
+                        <img id="preview-img" src="" alt="Preview">
+                    </div>
+                    <div class="upload-zone" id="upload-zone-back" style="flex:1; margin-bottom:0;">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Back Photo (Opt)</div>
+                        <input type="file" id="file-input-back" accept="image/*">
+                        <img id="preview-img-back" src="" alt="Preview">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -661,10 +669,14 @@
             const uploadZone = document.getElementById('upload-zone');
             const fileInput = document.getElementById('file-input');
             const previewImg = document.getElementById('preview-img');
+            const uploadZoneBack = document.getElementById('upload-zone-back');
+            const fileInputBack = document.getElementById('file-input-back');
+            const previewImgBack = document.getElementById('preview-img-back');
             const addBtn = document.getElementById('add-btn');
 
             // State
             let selectedFile = null;
+            let selectedFileBack = null;
 
             // 1. Live Fetch
             const loadProducts = async () => {
@@ -715,7 +727,8 @@
                                 e.target.disabled = true;
                                 try {
                                     if (storagePath) {
-                                        await sb.storage.from('product-images').remove([storagePath]);
+                                        const paths = storagePath.split(',');
+                                        await sb.storage.from('product-images').remove(paths);
                                     }
                                     await sb.from('products').delete().eq('id', id);
 
@@ -747,29 +760,38 @@
                 .subscribe();
 
             // 2. Upload Preview Logic
-            uploadZone.addEventListener('click', () => fileInput.click());
-            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = "#fff"; });
-            uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.style.borderColor = "rgba(255,255,255,0.3)"; });
-            uploadZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadZone.style.borderColor = "rgba(255,255,255,0.3)";
-                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-            });
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length) handleFile(e.target.files[0]);
-            });
+            const setupUploadZone = (zone, input, preview, isBack = false) => {
+                zone.addEventListener('click', () => input.click());
+                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = "#fff"; });
+                zone.addEventListener('dragleave', (e) => { e.preventDefault(); zone.style.borderColor = "rgba(255,255,255,0.3)"; });
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.style.borderColor = "rgba(255,255,255,0.3)";
+                    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0], isBack, preview);
+                });
+                input.addEventListener('change', (e) => {
+                    if (e.target.files.length) handleFile(e.target.files[0], isBack, preview);
+                });
+            };
 
-            const handleFile = (file) => {
-                selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImg.src = e.target.result;
-                    previewImg.style.display = 'block';
+            const handleFile = (file, isBack, preview) => {
+                if (isBack) {
+                    selectedFileBack = file;
+                } else {
+                    selectedFile = file;
                     addBtn.disabled = false;
                     addBtn.textContent = 'Add Product to Store';
                 }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
                 reader.readAsDataURL(file);
-            }
+            };
+
+            setupUploadZone(uploadZone, fileInput, previewImg, false);
+            setupUploadZone(uploadZoneBack, fileInputBack, previewImgBack, true);
 
             // 3. Submit Product Logic
             addBtn.addEventListener('click', async () => {
