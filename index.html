@@ -990,6 +990,31 @@
             color: rgba(0, 0, 0, 0.5);
         }
     </style>
+
+    <style>
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .modal-content {
+            background: #111; border: 1px solid rgba(255,255,255,0.2);
+            padding: 40px; border-radius: 10px; width: 90%; max-width: 500px;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute; top: 15px; right: 20px; font-size: 28px;
+            cursor: pointer; color: #888; transition: 0.3s;
+        }
+        .close-modal:hover { color: #fff; }
+        .form-input {
+            width: 100%; padding: 12px 15px; margin-bottom: 15px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-family: 'Jost', sans-serif; border-radius: 5px; outline: none;
+            transition: 0.3s border;
+        }
+        .form-input:focus { border-color: #fff; }
+    </style>
 </head>
 
 <body>
@@ -1237,7 +1262,7 @@
                         <img src="${product.image_url || ''}" alt="${product.name}" class="product-img" loading="lazy" decoding="async">
                         ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
                         <div class="product-overlay">
-                            <a href="${orderUrl}" target="_blank" class="btn btn-filled order-btn">Order on WhatsApp</a>
+                            <button onclick="openOrderModal('${product.name ? product.name.replace(/'/g, "\'") : ''}', '${product.price}', '${product.image_url}')" class="btn btn-filled order-btn" style="width: 100%; border:none;">Order Now</button>
                         </div>
                     </div>
                     <div class="product-info">
@@ -1543,6 +1568,68 @@
         }
 
         animate();
+    </script>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-order-modal">&times;</span>
+            <h3 class="bebas" style="font-size:30px; margin-bottom:20px; color:#fff;">Order Details</h3>
+            <form id="order-form">
+                <input type="hidden" id="order-product-name">
+                <input type="hidden" id="order-product-price">
+                <input type="hidden" id="order-product-image">
+                <input type="text" id="order-name" placeholder="Full Name" required class="form-input">
+                <input type="tel" id="order-phone" placeholder="Phone Number" required class="form-input">
+                <textarea id="order-address" placeholder="Delivery Address" required class="form-input" style="height: 80px; resize: none;"></textarea>
+                <input type="text" id="order-pincode" placeholder="Pincode" required class="form-input">
+                <input type="text" id="order-size" placeholder="Size (e.g. M, L, XL)" required class="form-input">
+                <button type="submit" class="btn btn-filled" style="width:100%; border:none; padding: 15px; font-size:16px;">Confirm & WhatsApp</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // --- Order Modal Logic ---
+        const orderModal = document.getElementById('order-modal');
+        const orderForm = document.getElementById('order-form');
+        
+        window.openOrderModal = (name, price, image) => {
+            document.getElementById('order-product-name').value = name;
+            document.getElementById('order-product-price').value = price;
+            // The image might be undefined if not in DB
+            document.getElementById('order-product-image').value = image || 'No Image';
+            orderModal.style.display = 'flex';
+        };
+
+        document.getElementById('close-order-modal').onclick = () => {
+            orderModal.style.display = 'none';
+        };
+        
+        window.onclick = (e) => {
+            if (e.target === orderModal) {
+                orderModal.style.display = 'none';
+            }
+        };
+
+        orderForm.onsubmit = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('order-name').value.trim();
+            const phone = document.getElementById('order-phone').value.trim();
+            const address = document.getElementById('order-address').value.trim();
+            const pincode = document.getElementById('order-pincode').value.trim();
+            const size = document.getElementById('order-size').value.trim();
+            
+            const pName = document.getElementById('order-product-name').value;
+            const pPrice = document.getElementById('order-product-price').value;
+            const pImage = document.getElementById('order-product-image').value;
+            
+            const waText = encodeURIComponent(`Hi! I want to place an order:\n\n*Product:* ${pName}\n*Price:* ₹${pPrice}\n*Image:* ${pImage}\n*Size:* ${size}\n\n*Customer Details:*\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\nPincode: ${pincode}`);
+            
+            window.open(`https://wa.me/918075857306?text=${waText}`, '_blank');
+            orderModal.style.display = 'none';
+            orderForm.reset();
+        };
     </script>
 </body>
 
