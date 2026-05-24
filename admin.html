@@ -806,22 +806,30 @@
 
                 addBtn.disabled = true;
                 addBtn.style.pointerEvents = 'none';
-                addBtn.textContent = `Uploading Photo...`;
+                addBtn.textContent = `Uploading Front Photo...`;
 
                 try {
-                    // Upload Image directly to Supabase Storage
-                    const fileName = `products/${Date.now()}_${selectedFile.name}`;
-                    const { error: uploadError } = await sb.storage
-                        .from('product-images')
-                        .upload(fileName, selectedFile);
-
+                    // Upload Front Image
+                    const fileNameFront = `products/${Date.now()}_front_${selectedFile.name}`;
+                    const { error: uploadError } = await sb.storage.from('product-images').upload(fileNameFront, selectedFile);
                     if (uploadError) throw uploadError;
+                    
+                    const { data: urlDataFront } = sb.storage.from('product-images').getPublicUrl(fileNameFront);
+                    let publicUrl = urlDataFront.publicUrl;
+                    let storagePath = fileNameFront;
 
-                    const { data: urlData } = sb.storage
-                        .from('product-images')
-                        .getPublicUrl(fileName);
+                    addBtn.textContent = `Uploading Back Photo...`;
 
-                    const imageUrl = urlData.publicUrl;
+                    // Upload Back Image (if exists)
+                    if (selectedFileBack) {
+                        const fileNameBack = `products/${Date.now()}_back_${selectedFileBack.name}`;
+                        const { error: uploadErrorBack } = await sb.storage.from('product-images').upload(fileNameBack, selectedFileBack);
+                        if (uploadErrorBack) throw uploadErrorBack;
+
+                        const { data: urlDataBack } = sb.storage.from('product-images').getPublicUrl(fileNameBack);
+                        publicUrl += ',' + urlDataBack.publicUrl;
+                        storagePath += ',' + fileNameBack;
+                    }
 
                     addBtn.textContent = `Finalizing...`;
 
@@ -831,8 +839,8 @@
                         price: Number(price),
                         category,
                         badge,
-                        image_url: imageUrl,
-                        storage_path: fileName
+                        image_url: publicUrl,
+                        storage_path: storagePath
                     });
 
                     if (dbError) throw dbError;
@@ -845,9 +853,14 @@
                     document.getElementById('p-badge').value = '';
                     document.getElementById('p-category').value = 'Formals';
                     selectedFile = null;
+                    selectedFileBack = null;
                     previewImg.style.display = 'none';
                     previewImg.src = '';
+                    previewImgBack.style.display = 'none';
+                    previewImgBack.src = '';
                     fileInput.value = '';
+                    fileInputBack.value = '';
+                    addBtn.disabled = true;
                     addBtn.textContent = 'Select Photo First';
 
                 } catch (err) {
